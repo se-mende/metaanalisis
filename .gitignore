@@ -1,0 +1,5 @@
+config/__pycache__
+output/.DS_Store
+output
+utils/__pycache__
+.DS_Store

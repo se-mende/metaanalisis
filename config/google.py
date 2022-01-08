@@ -1,0 +1,4 @@
+url= 'https://scholar.google.es/'
+search_term = 'scholar?hl=es&as_sdt=0%2C5&q=%28"all-day+schooling"+OR+"ampliación+de+la+jornada+escolar"+OR+"attend+school+full+time"+OR+"complete+double+schooling"+OR+"complete+school+day"+OR+"doble+escolaridad"+OR+"doble+jornada+escolar"+OR+"double+shift+schools"+OR+"escuela+tiempo+completo"+OR+"extended+school+day"+OR+"extended+school+hours"+OR+"extending+the+school+day"+OR+"full+school+days"+OR+"full+time+school"+OR+"jornada+escolar+completa"+OR+"jornada+escolar+completa"+OR+"jornada+escolar+extendida"+OR+"jornada+única"+OR+"lengthening+the+School+Day"+OR+"long+school+day"+OR+"school+full+time"+OR+"school+full-time"+OR+"the+school+day+extension"%29+&btnG='
+output = 'Google.xlsx'
+page = 'PageGoogle.txt'
