@@ -4,22 +4,20 @@ import config.keyphrases as keyphrases
 import utils.helper as helper
 
 #Scrap
-def run(my_html, data_frame, browser):
+def run(my_html, data_frame, browser, page):
     has_result = False
     resultados = my_html.find_all('div', class_='gs_ri')
+    matching_counter = 0
     for article in resultados:
         has_result = True
-        if article.find('h3', class_='gs_rt').a is None:
-            print('***Articulo sin url***')
-        else:
+        if article.find('h3', class_='gs_rt').a is not None:
             title = article.find('h3', class_='gs_rt').a.text
             url = article.find('h3', class_='gs_rt').a['href']
             authors = article.find('div', class_='gs_a').text
             abstract = article.find('div', class_='gs_rs').text
             abstract = re.sub('\xa0','',re.sub('\n',' ', abstract))
-            print(abstract)
             if passes_filter(title, abstract):
-                print(abstract)
+                matching_counter += 1
                 plus = get_plus(title, abstract)
                 filtro = otro_filtro(title, abstract)
                 data_frame = data_frame.append({'title': title,
@@ -27,10 +25,12 @@ def run(my_html, data_frame, browser):
                                                 'authors': authors,
                                                 'description': abstract,
                                                 'plus': plus,
-                                                'filter': filtro},
+                                                'filter': filtro,
+                                                'page': page},
                                                ignore_index=True)
+    
     browser.find_element_by_class_name("gs_ico.gs_ico_nav_next").click()
-
+    print(f'Encontrados {matching_counter} resultados en página {page}')
     return has_result, data_frame, BeautifulSoup(browser.page_source, 'lxml')
 
 def passes_filter(title, description):

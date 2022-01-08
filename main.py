@@ -1,36 +1,29 @@
-import pandas as pd
-import time
-from selenium.webdriver import Chrome
-from bs4 import BeautifulSoup
-from pathlib import Path
-import utils.helper as helper
+from enum import Enum
+import utils.scrapper as scrapper
 import config.google as google
-import utils.bot as bot
 
+class BD(Enum):
+    GOOGLE = 1
+    
 output_folder = 'output/'
-columns = ['title', 'url', 'authors', 'description', 'plus', 'filter']
-data_frame = pd.DataFrame(columns=columns)
-browser = Chrome(executable_path='./chromedriver')
-page = 1
+output = ''
+pagefile = ''
+url_general = ''
 
 if __name__ == '__main__':
 
-    pagefile = google.page
+    print('***** Metaanálisis - Andrea Alvarez Ojeda *****\n')
+    print('¿Qué base de datos desea buscar?')
+    print(f'1. Google ({google.url})')
+    bd_input = int(input())
 
-    helper.read_page(pagefile)
-    url_general = google.url + google.search_term
-    browser.get(url_general)
-    my_html = BeautifulSoup(browser.page_source, 'lxml')
+    if(bd_input > 0 and bd_input <= 1):
 
-    has_result = True
-    while has_result:
+        if bd_input == BD.GOOGLE.value:
+            pagefile = google.page
+            url_general = google.url + google.search_term
+            output = google.output
 
-        has_result, data_frame, my_html = bot.run(my_html, data_frame, browser)
-
-        Path(output_folder).mkdir(parents=True, exist_ok=True)
-        data_frame.to_excel(output_folder + google.output)
-
-        page = helper.set_page(pagefile, page)
-        time.sleep(10)
-
-
+        scrapper.run(pagefile, output_folder, url_general, output)
+    else:
+        print('Opción no válida. Intente de nuevo.')

@@ -11,12 +11,12 @@ def check_list_in_text(text, search_list):
 def read_page(page_file):
     try:
         with open(page_file, 'r') as f_page:
-            page = int(f_page.read())
+            return int(f_page.read())
     except:
-        page = 1
+        return 1
 
 def set_page(page_file, page):
-    with open('page_google.txt', 'w') as f_page:
+    with open(page_file, 'w') as f_page:
         f_page.write(str(page))
     page += 1
     return page
