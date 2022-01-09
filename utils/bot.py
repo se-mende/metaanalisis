@@ -55,7 +55,7 @@ def scopus_run(my_html, data_frame, browser, page):
         browser.back()
         time.sleep(3)
     
-    browser.find_element_by_css_selector("#resultsFooter>div.col-md-6.center-block.text-center>ul>li:nth-child(10)>a").click()
+    browser.execute_script("return setSelectedLink('NextPageButton');")
 
     print(f'Encontrados {matching_counter} resultados en página {page}')
 
