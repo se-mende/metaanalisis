@@ -2,6 +2,7 @@ import utils.scrapper as scrapper
 import config.google as google
 import config.scopus as scopus
 import config.sciencedirect as sciencedirect
+import config.webofscience as webofscience
 from config.constants import BD
     
 output_folder = 'output/'
@@ -18,9 +19,10 @@ if __name__ == '__main__':
     print(f'1. Google ({google.url})')
     print(f'2. Scopus ({scopus.url})')
     print(f'3. Science Direct ({sciencedirect.url})')
+    print(f'4. Web of Science ({webofscience.url})')
     bd_input = int(input())
 
-    if(bd_input > 0 and bd_input <= 3):
+    if(bd_input > 0 and bd_input <= 4):
 
         if bd_input == BD.GOOGLE.value:
             pagefile = google.page
@@ -38,6 +40,12 @@ if __name__ == '__main__':
             output = sciencedirect.output
             user = sciencedirect.user
             password = sciencedirect.password
+        elif bd_input == BD.WEBOFSCIENCE.value:
+            pagefile = webofscience.page
+            url_general = webofscience.url
+            output = webofscience.output
+            user = webofscience.user
+            password = webofscience.password
 
         scrapper.run(bd_input, pagefile, output_folder, url_general, output, user, password)
     else:

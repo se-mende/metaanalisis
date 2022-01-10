@@ -40,6 +40,8 @@ def run(bd_input, pagefile, output_folder, url_general, output, user, password):
             login_scopus(browser, user, password)
         elif bd_input == BD.SCIENCEDIRECT.value:
             login_sciencedirect(browser, user, password)
+        elif bd_input == BD.WEBOFSCIENCE.value:
+            login_sciencedirect(browser, user, password)
     
     my_html = BeautifulSoup(browser.page_source, 'lxml')
 

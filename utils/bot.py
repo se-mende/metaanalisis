@@ -6,6 +6,7 @@ import utils.helper as helper
 from config.constants import BD
 import config.scopus as scopus
 import config.sciencedirect as sciencedirect
+import config.webofscience as webofscience
 
 #Scrap
 def run (bd_input, my_html, data_frame, browser, page, first):
@@ -15,6 +16,7 @@ def run (bd_input, my_html, data_frame, browser, page, first):
         if first:
             browser.find_element_by_css_selector('#documents-tab-panel>div>form>div:nth-child(2)>div>div.keyword-wrapper.DocumentSearchForm-module__CqSqZ.DocumentSearchForm-module___dnnI>els-input>div>label>input').send_keys(scopus.search_term)
             browser.find_element_by_css_selector('#documents-tab-panel>div>form>div.DocumentSearchForm-module__1S2LH.DocumentSearchForm-module__3fwOu.DocumentSearchForm-module__3dDdf.margin-size-16-t>div:nth-child(2)>button').click()
+            
             time.sleep(5)
             my_html = BeautifulSoup(browser.page_source, 'lxml')
         return scopus_run(my_html, data_frame, browser, page)
@@ -23,9 +25,80 @@ def run (bd_input, my_html, data_frame, browser, page, first):
             browser.find_element_by_id('qs-searchbox-input').send_keys(sciencedirect.search_term)
             browser.find_element_by_css_selector('#aa-srp-search-submit-button>button').click()
             browser.find_element_by_css_selector('#srp-facets>div.facet-container>form>div:nth-child(2)>div:nth-child(2)>fieldset>ol>li:nth-child(2)>div>label>span.checkbox-check.checkbox-small.checkbox-label-indent').click()
+            
             time.sleep(5)
             my_html = BeautifulSoup(browser.page_source, 'lxml')
         return sciencedirect_run(my_html, data_frame, browser, page)
+    elif bd_input == BD.WEBOFSCIENCE.value:
+        if first:
+            browser.find_element_by_id('onetrust-accept-btn-handler').click()
+            browser.find_element_by_css_selector('#snSearchType>div.row.ng-star-inserted>app-search-row>div>div.search-criteria-input-holder.ng-star-inserted>input').send_keys(webofscience.search_term)
+            browser.find_element_by_css_selector('#snSearchType>div.button-row>button.mat-focus-indicator.cdx-but-md.search.uppercase-button.mat-flat-button.mat-button-base.mat-primary').click()
+            time.sleep(5)
+            browser.find_element_by_css_selector('#filter-section-DT>div>div>app-refine-option:nth-child(1)>div').click()
+            browser.find_element_by_css_selector('#filter-section-DT>div>div>div>button.mat-focus-indicator.refine-button.uppercase-button.mat-flat-button.mat-button-base.mat-primary.ng-star-inserted>span.mat-button-wrapper').click()
+        
+            time.sleep(5)
+            my_html = BeautifulSoup(browser.page_source, 'lxml')
+        return webofscience_run(my_html, data_frame, browser, page)
+
+def webofscience_run(my_html, data_frame, browser, page):
+    has_result = False
+    
+    y = 200
+    for timer in range(0,70):
+         browser.execute_script("window.scrollTo(0, "+str(y)+")")
+         y += 200
+         time.sleep(0.5)
+
+    my_html = BeautifulSoup(browser.page_source, 'lxml')
+    results = my_html.find_all('div', class_='data-section')
+    matching_counter = 0
+    counter = 1
+    for article in results:
+        has_result = True
+        article_url = webofscience.article_base_url + article.find('a', class_='title')['href']
+        browser.get(article_url)
+        try:
+            title = browser.find_element_by_class_name('title').text
+            url = article_url
+            authors = article.find('div', class_='ng-star-inserted').text
+
+            try:
+                abstract = browser.find_element_by_id('FullRTa-abstract-basic').text
+                abstract = re.sub('\xa0','',re.sub('\n',' ', abstract))
+            except:
+                abstract = ''
+        except:
+            title = ''
+
+        print(str(counter) + '. ' + title)
+        counter += 1
+
+        if passes_filter(title, abstract):
+            matching_counter += 1
+            plus = get_plus(title, abstract)
+            filtro = otro_filtro(title, abstract)
+            data_frame = data_frame.append({'title': title,
+                                            'url': url,
+                                            'authors': authors,
+                                            'description': abstract,
+                                            'plus': plus,
+                                            'filter': filtro,
+                                            'page': page},
+                                            ignore_index=True)
+        browser.back()
+        time.sleep(3)
+
+    try:
+        browser.find_element_by_css_selector('body > app-wos > div > div > main > div > div.held > app-input-route > app-base-summary-component > div > div.results.ng-star-inserted > app-page-controls.app-page-controls.ng-star-inserted > div > form > div > button:nth-child(4)').click()
+    except:
+        has_result = False
+
+    print(f'Encontrados {matching_counter} resultados en página {page}')
+    time.sleep(5)
+
+    return has_result, data_frame, BeautifulSoup(browser.page_source, 'lxml')
 
 def sciencedirect_run(my_html, data_frame, browser, page):
     has_result = False
