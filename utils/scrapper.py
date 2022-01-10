@@ -2,6 +2,7 @@ from selenium.webdriver import Chrome
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
+from config.constants import BD
 from pathlib import Path
 import utils.helper as helper
 import utils.bot as bot
@@ -13,11 +14,16 @@ def set_paths(output):
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
     Path(output).unlink(missing_ok=True)
 
-def login(browser, user, password):
-    print('Es necesario loguearse. Intentando loguearse...')
+def login_scopus(browser, user, password):
     browser.find_element_by_id('fidname').send_keys(user)
     browser.find_element_by_css_selector('#formegre>font>input[type=password]:nth-child(4)').send_keys(password)
     browser.find_element_by_id('botingre').click()
+
+def login_sciencedirect(browser, user, password):
+    browser.find_element_by_id('egre').click()
+    browser.find_element_by_id('fidname').send_keys(user)
+    browser.find_element_by_id('pass2').send_keys(password)
+    browser.find_element_by_id('botingre2').click()
 
 def run(bd_input, pagefile, output_folder, url_general, output, user, password):
     set_paths(output_folder + output)
@@ -29,7 +35,11 @@ def run(bd_input, pagefile, output_folder, url_general, output, user, password):
     browser.get(url_general)
 
     if user != '' and password != '':
-        login(browser, user, password)
+        print('Es necesario loguearse. Intentando loguearse...')
+        if bd_input == BD.SCOPUS.value:
+            login_scopus(browser, user, password)
+        elif bd_input == BD.SCIENCEDIRECT.value:
+            login_sciencedirect(browser, user, password)
     
     my_html = BeautifulSoup(browser.page_source, 'lxml')
 

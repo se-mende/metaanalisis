@@ -5,6 +5,7 @@ import config.keyphrases as keyphrases
 import utils.helper as helper
 from config.constants import BD
 import config.scopus as scopus
+import config.sciencedirect as sciencedirect
 
 #Scrap
 def run (bd_input, my_html, data_frame, browser, page, first):
@@ -17,6 +18,62 @@ def run (bd_input, my_html, data_frame, browser, page, first):
             time.sleep(5)
             my_html = BeautifulSoup(browser.page_source, 'lxml')
         return scopus_run(my_html, data_frame, browser, page)
+    elif bd_input == BD.SCIENCEDIRECT.value:
+        if first:
+            browser.find_element_by_id('qs-searchbox-input').send_keys(sciencedirect.search_term)
+            browser.find_element_by_css_selector('#aa-srp-search-submit-button>button').click()
+            browser.find_element_by_css_selector('#srp-facets>div.facet-container>form>div:nth-child(2)>div:nth-child(2)>fieldset>ol>li:nth-child(2)>div>label>span.checkbox-check.checkbox-small.checkbox-label-indent').click()
+            time.sleep(5)
+            my_html = BeautifulSoup(browser.page_source, 'lxml')
+        return sciencedirect_run(my_html, data_frame, browser, page)
+
+def sciencedirect_run(my_html, data_frame, browser, page):
+    has_result = False
+    results = my_html.find_all('div', class_='result-item-content')
+    matching_counter = 0
+    counter = 1
+    for article in results:
+        has_result = True
+        article_url = sciencedirect.article_base_url + article.find('a', class_='result-list-title-link')['href']
+        browser.get(article_url)
+        title = browser.find_element_by_css_selector('#screen-reader-main-title>span').text
+        url = article_url
+        author_spans = article.find_all('span', class_='author')
+        authors = ''
+        for span in author_spans:
+            authors += span.text + ', '
+        try:
+            abstract = browser.find_element_by_class_name('abstract.author').text
+            abstract = re.sub('\xa0','',re.sub('\n',' ', abstract))
+        except:
+            abstract = ''
+        
+        print(str(counter) + '. ' + title)
+        print(str(counter) + '. ' + abstract)
+        counter += 1
+
+        if passes_filter(title, abstract):
+            matching_counter += 1
+            plus = get_plus(title, abstract)
+            filtro = otro_filtro(title, abstract)
+            data_frame = data_frame.append({'title': title,
+                                            'url': url,
+                                            'authors': authors,
+                                            'description': abstract,
+                                            'plus': plus,
+                                            'filter': filtro,
+                                            'page': page},
+                                            ignore_index=True)
+        browser.back()
+        time.sleep(3)
+    next_url = f'{sciencedirect.next_url}=FLA&offset={25*page}'
+    browser.get(next_url)
+
+    print(f'Encontrados {matching_counter} resultados en página {page}')
+    time.sleep(5)
+
+    return has_result, data_frame, BeautifulSoup(browser.page_source, 'lxml')
+
 
 def scopus_run(my_html, data_frame, browser, page):    
     has_result = False
